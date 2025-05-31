@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가위바위보 게임</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .game-title {
+            font-size: 2.5rem; /* Larger title */
+            font-weight: 700;
+            color: #2c3e50; /* Darker text */
+            margin-bottom: 1rem;
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #34495e;
+            background-color: #ecf0f1; /* Light gray background for scoreboard */
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .choices-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+        }
+        .choice-button {
+            background-color: #3498db; /* Blue button */
+            color: white;
+            padding: 1rem 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 1rem; /* Rounded buttons */
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            flex: 1 1 auto; /* Allow buttons to grow/shrink */
+            min-width: 120px; /* Minimum width for buttons */
+        }
+        .choice-button:hover {
+            background-color: #2980b9; /* Darker blue on hover */
+            transform: translateY(-3px);
+        }
+        .choice-button:active {
+            transform: translateY(0);
+        }
+        .result-display {
+            font-size: 1.75rem; /* Larger result text */
+            font-weight: 700;
+            color: #e74c3c; /* Red for results */
+            min-height: 3rem; /* Ensure space for result */
+        }
+        .round-info {
+            font-size: 1.2rem;
+            color: #555;
+            margin-top: 1rem;
+        }
+        .reset-button {
+            background-color: #95a5a6; /* Gray reset button */
+            color: white;
+            padding: 0.75rem 1.25rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 1.5rem;
+        }
+        .reset-button:hover {
+            background-color: #7f8c8d;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 1.5rem;
+            }
+            .game-title {
+                font-size: 2rem;
+            }
+            .choice-button {
+                font-size: 1.2rem;
+                padding: 0.8rem 1.2rem;
+            }
+            .result-display {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">가위바위보 게임</h1>
+        <div class="score-board">
+            <span>나: <span id="player-score">0</span></span>
+            <span>컴퓨터: <span id="computer-score">0</span></span>
+        </div>
+        <div class="choices-container">
+            <button class="choice-button" onclick="playGame('가위')">가위 ✂️</button>
+            <button class="choice-button" onclick="playGame('바위')">바위 🪨</button>
+            <button class="choice-button" onclick="playGame('보')">보 📄</button>
+        </div>
+        <div class="round-info" id="round-info"></div>
+        <div class="result-display" id="result-display">게임을 시작하세요!</div>
+        <button class="reset-button" onclick="resetGame()">다시 시작하기</button>
+    </div>
+
+    <script>
+        // 점수 변수 초기화
+        let playerScore = 0;
+        let computerScore = 0;
+
+        // HTML 요소 가져오기
+        const playerScoreDisplay = document.getElementById('player-score');
+        const computerScoreDisplay = document.getElementById('computer-score');
+        const resultDisplay = document.getElementById('result-display');
+        const roundInfoDisplay = document.getElementById('round-info');
+
+        /**
+         * 컴퓨터의 선택을 무작위로 생성합니다.
+         * @returns {string} '가위', '바위', '보' 중 하나
+         */
+        function getComputerChoice() {
+            const choices = ['가위', '바위', '보'];
+            const randomIndex = Math.floor(Math.random() * choices.length);
+            return choices[randomIndex];
+        }
+
+        /**
+         * 가위바위보 게임의 승패를 결정합니다.
+         * @param {string} playerChoice - 플레이어의 선택 ('가위', '바위', '보')
+         * @param {string} computerChoice - 컴퓨터의 선택 ('가위', '바위', '보')
+         * @returns {string} 게임 결과 메시지
+         */
+        function determineWinner(playerChoice, computerChoice) {
+            if (playerChoice === computerChoice) {
+                return '비겼습니다!';
+            } else if (
+                (playerChoice === '가위' && computerChoice === '보') ||
+                (playerChoice === '바위' && computerChoice === '가위') ||
+                (playerChoice === '보' && computerChoice === '바위')
+            ) {
+                playerScore++;
+                return '이겼습니다!';
+            } else {
+                computerScore++;
+                return '졌습니다!';
+            }
+        }
+
+        /**
+         * 게임 플레이 로직을 실행하고 결과를 업데이트합니다.
+         * @param {string} playerChoice - 플레이어의 선택
+         */
+        function playGame(playerChoice) {
+            const computerChoice = getComputerChoice();
+            const result = determineWinner(playerChoice, computerChoice);
+
+            // 라운드 정보 업데이트
+            roundInfoDisplay.textContent = `나: ${playerChoice}, 컴퓨터: ${computerChoice}`;
+            // 결과 메시지 업데이트
+            resultDisplay.textContent = result;
+            // 점수판 업데이트
+            playerScoreDisplay.textContent = playerScore;
+            computerScoreDisplay.textContent = computerScore;
+        }
+
+        /**
+         * 게임 점수와 표시를 초기화합니다.
+         */
+        function resetGame() {
+            playerScore = 0;
+            computerScore = 0;
+            playerScoreDisplay.textContent = playerScore;
+            computerScoreDisplay.textContent = computerScore;
+            resultDisplay.textContent = '게임을 다시 시작하세요!';
+            roundInfoDisplay.textContent = '';
+        }
+    </script>
+</body>
+</html>
